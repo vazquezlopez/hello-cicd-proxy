@@ -2,22 +2,12 @@
 
 name: CI
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  
 env:
   # Setting an environment variable with the value of a configuration variable
   env_var: ${{ vars.ENV_CONTEXT_VAR }}
-  
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+
 jobs:
   display-variables:
     name: ${{ vars.JOB_NAME }}
@@ -26,69 +16,19 @@ jobs:
     runs-on: ${{ vars.RUNNER }}
     environment: ${{ vars.ENVIRONMENT_STAGE }}
     steps:
-      - name: Use variables
-        run: |
-          echo "repository variable : $REPOSITORY_VAR"
-          echo "organization variable : $ORGANIZATION_VAR"
-          echo "overridden variable : $OVERRIDE_VAR"
-          echo "variable from shell environment : $env_var"
-        env:
-          REPOSITORY_VAR: ${{ vars.REPOSITORY_VAR }}
-          ORGANIZATION_VAR: ${{ vars.ORGANIZATION_VAR }}
-          OVERRIDE_VAR: ${{ vars.OVERRIDE_VAR }}
+    - name: Use variables
+      run: |
+        echo "repository variable : $REPOSITORY_VAR"
+        echo "organization variable : $ORGANIZATION_VAR"
+        echo "overridden variable : $OVERRIDE_VAR"
+        echo "variable from shell environment : $env_var"
+      env:
+        REPOSITORY_VAR: ${{ vars.REPOSITORY_VAR }}
+        ORGANIZATION_VAR: ${{ vars.ORGANIZATION_VAR }}
+        OVERRIDE_VAR: ${{ vars.APIGEE_PROXY_NAME }}
         
-      - name: ${{ vars.HELLO_WORLD_STEP }}
-        if: ${{ vars.HELLO_WORLD_ENABLED == 'true' }}
-        uses: actions/hello-world-javascript-action@main
-        with:
-          who-to-greet: ${{ vars.GREET_NAME }}
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-
-      # Runs a single command using the runners shell
-      - name: Use variables
-        run: |
-          echo "repository variable : $APIGEE_ENV"
-          echo "organization variable : $ORGANIZATION_VAR"
-          echo "overridden variable : $OVERRIDE_VAR"
-          echo "variable from shell environment : $env_var"
-        env:
-          REPOSITORY_VAR: ${{ vars.APIGEE_ENV }}
-          ORGANIZATION_VAR: ${{ vars.APIGEE_ORG }}
-          OVERRIDE_VAR: ${{ env.APIGEE_PROXY_NAME }}
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
-      
-      - name: auth with Google
-        id: auth
-        uses: google-github-actions/auth@v0
-        with:
-          token_format: "access_token"
-          create_credentials_file: true
-          activate_credentials_file: true
-          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_POOL_ID }}
-          service_account: ${{ secrets.SERVICE_ACCOUNT }}
-      - name: Create API bundle
-        run: zip -r proxy.zip apiproxy
-      - name: Set output
-        id: val
-        run: echo "output=${{ vars.APIGEE_ORG }}" >> $GITHUB_OUTPUT
-      - name: Print my output
-        run: echo ${{steps.val.outputs.name}}
-      - name: Upload API Proxy Bundle
-        id: upload
-        run: "echo \"apigee-revision=$(curl --fail -X POST -H \"Content-Type: multipart/form-data\" -H \"Authorization: Bearer ${{steps.auth.outputs.access_token}}\" -F \"file=@proxy.zip\" \"https://apigee.googleapis.com/v1/organizations/${{vars.APIGEE_ORG}}/apis?action=import&name=${{vars.APIGEE_PROXY_NAME}}\" --silent | jq --raw-output .revision)\" >> $GITHUB_OUTPUT"
-      - name: Deploy Revision
-        run: "curl \"https://apigee.googleapis.com/v1/organizations/${{ vars.APIGEE_ORG }}/environments/${{vars.APIGEE_ENV}}/apis/${{vars.APIGEE_PROXY_NAME}}/revisions/${{steps.upload.outputs.apigee-revision}}/deployments?override=true\" -X POST -H \"Authorization: Bearer ${{steps.auth.outputs.access_token}}\""
+    - name: ${{ vars.HELLO_WORLD_STEP }}
+      if: ${{ vars.HELLO_WORLD_ENABLED == 'true' }}
+      uses: actions/hello-world-javascript-action@main
+      with:
+        who-to-greet: ${{ vars.GREET_NAME }}
