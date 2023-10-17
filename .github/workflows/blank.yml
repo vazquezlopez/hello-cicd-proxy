@@ -14,20 +14,33 @@ jobs:
     # You can use configuration variables with the `vars` context for dynamic jobs
     runs-on: ubuntu-latest
     environment: ${{ vars.ENV_CONTEXT_VAR }}
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
-    - name: Use variables
+    - name: Print variables
       run: |
-        echo "repository variable : $REPOSITORY_VAR"
-        echo "organization variable : $ORGANIZATION_VAR"
-        echo "overridden variable : $OVERRIDE_VAR"
+        echo "environment variable : $APIGEE_ENV"
+        echo "organization variable : $APIGEE_ORG"
+        echo "overridden variable : $APIGEE_PROXY_NAME"
         echo "variable from shell environment : $env_var"
       env:
-        REPOSITORY_VAR: ${{ vars.REPOSITORY_VAR }}
-        ORGANIZATION_VAR: ${{ vars.ORGANIZATION_VAR }}
-        OVERRIDE_VAR: ${{ vars.APIGEE_PROXY_NAME }}
-        
-    - name: ${{ vars.HELLO_WORLD_STEP }}
-      if: ${{ vars.HELLO_WORLD_ENABLED == 'true' }}
-      uses: actions/hello-world-javascript-action@main
+        APIGEE_ENV: ${{ vars.APIGEE_ENV }}
+        APIGEE_ORG: ${{ vars.APIGEE_ORG }}
+        APIGEE_PROXY_NAME: ${{ vars.APIGEE_PROXY_NAME }}
+    - name: auth with Google
+      id: auth
+      uses: google-github-actions/auth@v0
       with:
-        who-to-greet: ${{ vars.GREET_NAME }}
+        token_format: "access_token"
+        create_credentials_file: true
+        activate_credentials_file: true
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_POOL_ID }}
+        service_account: ${{ secrets.SERVICE_ACCOUNT }}
+    - name: Create API bundle
+      run: zip -r proxy.zip apiproxy
+    - name: Upload API Proxy Bundle
+      id: upload
+      run: "echo \"apigee-revision=$(curl --fail -X POST -H \"Content-Type: multipart/form-data\" -H \"Authorization: Bearer ${{steps.auth.outputs.access_token}}\" -F \"file=@proxy.zip\" \"https://apigee.googleapis.com/v1/organizations/${{vars.APIGEE_ORG}}/apis?action=import&name=${{vars.APIGEE_PROXY_NAME}}\" --silent | jq --raw-output .revision)\" >> $GITHUB_OUTPUT"
+    - name: Deploy Revision
+      run: "curl \"https://apigee.googleapis.com/v1/organizations/${{ vars.APIGEE_ORG }}/environments/${{vars.APIGEE_ENV}}/apis/${{vars.APIGEE_PROXY_NAME}}/revisions/${{steps.upload.outputs.apigee-revision}}/deployments?override=true\" -X POST -H \"Authorization: Bearer ${{steps.auth.outputs.access_token}}\""
