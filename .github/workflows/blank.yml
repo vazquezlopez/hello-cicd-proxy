@@ -30,10 +30,10 @@ jobs:
       # Runs a single command using the runners shell
       # Static code analysis (Proxy, JS): static-code-analysis
       - run: ls
-      
+      - run: pwd
       - name: Run a one-line script
         run: |
-          npm install
+          npm install --silent --no-fund
           ./node_modules/apigeelint/cli.js -s apiproxy -f html.js -e PO013 > apigeelint-out.html
       - run: ls
 
