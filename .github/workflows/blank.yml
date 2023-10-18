@@ -34,7 +34,7 @@ jobs:
       - name: Run a one-line script
         run: |
           npm install
-          ./node_modules/apigeelint/cli.js -s ./apiproxy -f html.js -e PO013 > ./apigeelint-out.html
+          ./node_modules/apigeelint/cli.js -s apiproxy -f html.js -e PO013 > apigeelint-out.html
       - run: ls
 
       # Runs a set of commands using the runners shell
