@@ -30,7 +30,9 @@ jobs:
       # Runs a single command using the runners shell
       # Static code analysis (Proxy, JS): static-code-analysis
       - run: ls
+      - run: cd ../
       - run: pwd
+      - run: ls
       - name: Run a one-line script
         run: |
           npm install --silent --no-fund
