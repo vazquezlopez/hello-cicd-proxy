@@ -26,7 +26,10 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-
+      - uses: actions/upload-artifact@v3
+        with:
+          name: apigeelint-report
+          path: output/apigeelint/apigeelint-out.html
       # Runs a single command using the runners shell
       # Static code analysis (Proxy, JS): static-code-analysis
       - run: ls
