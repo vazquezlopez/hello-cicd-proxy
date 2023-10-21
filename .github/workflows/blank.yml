@@ -44,7 +44,9 @@ jobs:
 
       # Runs a set of test
       - name: mocha
-        run: npm install -g mocha-junit-reporter
+        run: |
+          npm install -g mocha-junit-reporter
+          mocha test --reporter mocha-junit-reporter mochaFile=index.html
       - run: ls
       - uses: actions/upload-artifact@v3
         with:
