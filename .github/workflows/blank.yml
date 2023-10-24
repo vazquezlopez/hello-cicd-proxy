@@ -20,7 +20,7 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     container:
-      image: 'node:18.18.2-alpine3.9'
+      image: 'node:18.18.2-alpine3.18'
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -45,7 +45,7 @@ jobs:
       # Runs a set of test
       - name: mocha
         run: |
-          npm i mocha@7.0.1
+          npm i mocha@7.2
           npm install -g mocha-junit-reporter
           mocha test --reporter mocha-junit-reporter
       - run: ls
