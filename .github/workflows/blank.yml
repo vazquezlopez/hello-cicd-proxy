@@ -45,7 +45,6 @@ jobs:
       # Runs a set of test
       - name: mocha
         run: |
-          npm i mocha@7.2
           npm install -g mocha-junit-reporter
           mocha test --reporter mocha-junit-reporter
       - run: ls
